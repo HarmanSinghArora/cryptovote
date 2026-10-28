@@ -17,15 +17,21 @@ class HashChainBlock:
         self.token = token
         self.signature = str(signature)
         self.previous_hash = previous_hash
-        self.timestamp = timestamp or datetime.now(timezone.utc).isoformat()
+        self.timestamp = timestamp or datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
         self.entry_hash = entry_hash or self.calculate_hash()
 
     def calculate_hash(self):
         """
-        Calculates SHA-256(block_index + timestamp + candidate_id + token + signature + previous_hash)
+        Calculates SHA-256 using the unified compute_vote_hash method.
         """
-        payload = f"{self.block_index}|{self.timestamp}|{self.candidate_id}|{self.token}|{self.signature}|{self.previous_hash}"
-        return hashlib.sha256(payload.encode('utf-8')).hexdigest()
+        return HashChainLedger.compute_vote_hash(
+            self.block_index,
+            self.candidate_id,
+            self.token,
+            self.signature,
+            self.previous_hash,
+            self.timestamp
+        )
 
     def to_dict(self):
         return {
