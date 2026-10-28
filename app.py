@@ -412,12 +412,12 @@ def create_app(config_class=Config):
 
         s3_status = 'Local export complete (AWS S3 upload ready for production)'
 
-        # Production S3 upload if configured
-        if app.config.get('USE_PARAMETER_STORE') or os.environ.get('AWS_ACCESS_KEY_ID'):
+        # Production S3 upload if AWS is available
+        if app.config.get('USE_PARAMETER_STORE') or os.environ.get('AWS_ACCESS_KEY_ID') or os.path.exists(os.path.expanduser('~/.aws/credentials')):
             try:
                 import boto3
-                s3 = boto3.client('s3', region_name=app.config['AWS_REGION'])
-                bucket = app.config['S3_BUCKET_NAME']
+                s3 = boto3.client('s3', region_name=app.config.get('AWS_REGION', 'ap-south-1'))
+                bucket = app.config.get('S3_BUCKET_NAME')
                 s3.upload_file(results_path, bucket, 'results.json')
                 s3.upload_file(chain_path, bucket, 'chain.json')
                 s3_status = f"Successfully uploaded results.json and chain.json to s3://{bucket}"

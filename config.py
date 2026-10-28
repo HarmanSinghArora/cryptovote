@@ -13,7 +13,7 @@ default_sqlite_url = f"sqlite:///{os.path.join(basedir, 'cryptovote.db').replace
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'cryptovote-super-secret-key-2026')
-    ADMIN_SECRET_KEY = os.environ.get('ADMIN_SECRET_KEY', 'admin_secret_cryptovote_lab')
+    ADMIN_SECRET_KEY = os.environ.get('ADMIN_SECRET_KEY', 'AdminSecretCryptoVote2026!')
 
     # Database: Defaults to local SQLite, easily overridden by RDS MySQL connection string
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', default_sqlite_url)
@@ -21,7 +21,7 @@ class Config:
 
     # AWS Settings
     AWS_REGION = os.environ.get('AWS_REGION', 'ap-south-1')
-    S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'cryptovote-results-lab')
+    S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME', 'cryptovote-audit-882478410161')
     USE_PARAMETER_STORE = os.environ.get('USE_PARAMETER_STORE', 'False').lower() in ('true', '1', 'yes')
     PARAMETER_STORE_PREFIX = os.environ.get('PARAMETER_STORE_PREFIX', '/cryptovote/')
 
