@@ -141,7 +141,8 @@ def run_simulation():
     chain_info = res_chain.json()
     print(f"[+] Hash Chain Valid: {chain_info['is_valid']}")
     print(f"  - Total Verified Blocks: {chain_info['total_blocks']}")
-    print(f"  - Details: {chain_info['details']['message']}")
+    details_str = chain_info.get('details', {}).get('message') or chain_info.get('details', {}).get('error', 'N/A')
+    print(f"  - Details: {details_str}")
 
     # 13. Current Results
     print("\n[Step 13] Viewing Live Results Tally (GET /results)...")

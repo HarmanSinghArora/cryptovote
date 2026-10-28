@@ -28,6 +28,16 @@ def create_app(config_class=Config):
     # Initialize extensions
     db.init_app(app)
 
+    with app.app_context():
+        db.create_all()
+        if Candidate.query.count() == 0:
+            c1 = Candidate(name="Alice Green", party="Cyber Security Party", bio="Advocate for digital privacy.")
+            c2 = Candidate(name="Bob Stone", party="Cloud Computing Alliance", bio="Focused on high availability.")
+            c3 = Candidate(name="Charlie Vance", party="Innovation Coalition", bio="Championing cryptographic integrity.")
+            db.session.add_all([c1, c2, c3])
+            db.session.commit()
+            print("[+] Initialized database tables and default election candidates.")
+
     # Persistent Authority Keypair Management
     keys_dir = os.path.join(os.path.dirname(__file__), 'keys')
     os.makedirs(keys_dir, exist_ok=True)

@@ -8,12 +8,15 @@ from dotenv import load_dotenv
 # Load local .env if present
 load_dotenv()
 
+basedir = os.path.abspath(os.path.dirname(__file__))
+default_sqlite_url = f"sqlite:///{os.path.join(basedir, 'cryptovote.db').replace(os.sep, '/')}"
+
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'cryptovote-super-secret-key-2026')
     ADMIN_SECRET_KEY = os.environ.get('ADMIN_SECRET_KEY', 'admin_secret_cryptovote_lab')
 
     # Database: Defaults to local SQLite, easily overridden by RDS MySQL connection string
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///cryptovote.db')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', default_sqlite_url)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # AWS Settings
