@@ -1,0 +1,21 @@
+[Unit]
+Description=Gunicorn production daemon to serve CryptoVote Flask application
+After=network.target
+
+[Service]
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/home/ec2-user/cryptovote
+Environment="PATH=/home/ec2-user/cryptovote/venv/bin:/usr/local/bin:/usr/bin"
+Environment="USE_PARAMETER_STORE=True"
+Environment="AWS_REGION=ap-south-1"
+Environment="PARAMETER_STORE_PREFIX=/cryptovote/"
+
+# Starts Gunicorn on Port 80 with 3 worker processes
+ExecStart=/home/ec2-user/cryptovote/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:80 --access-logfile /var/log/cryptovote_access.log --error-logfile /var/log/cryptovote_error.log wsgi:app
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

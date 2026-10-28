@@ -1,152 +1,142 @@
-# Coordination Handoff to Person A (Cloud Infrastructure & Frontend)
+# Live Coordination Handoff to Person A (Infrastructure & Frontend)
 **Project:** CryptoVote – Secure Online Voting System  
-**From:** Person B (Backend, Database & Cryptography)  
-**Date:** October 28, 2026  
+**Team:** Person A (Cloud Infra & Frontend) & Person B (Backend & Database)  
+**Last Updated:** October 28, 2026  
+**Status:** Backend & Database & Cryptography 100% Complete & Tested!  
 
 ---
 
-## 1. Questions & Immediate Action Items for Person A
+## 1. Cloud Resources Configured by Person B (Ready for Person A)
 
-Please review the following checkpoints and share the requested details as soon as they are configured in AWS:
+The backend and database components are fully provisioned and tested:
 
-### A. AWS Account Access & Budget
-1. **IAM User for Person B:**
-   - Has the IAM user with `PowerUserAccess` (or necessary lab permissions) been created for Person B in your AWS account?
-   - Region agreed: `ap-south-1` (Mumbai).
-2. **AWS Budget:**
-   - Has the AWS Budget ($5 USD cap) with email notifications to both team members been created?
+| Service / Resource | Name / ID | Purpose |
+|---|---|---|
+| **AWS Region** | `ap-south-1` (Mumbai) | Target deployment region |
+| **AWS Account ID** | `882478410161` | Main project account |
+| **Custom VPC** | `vpc-061f4fe33deb982d5` (10.0.0.0/16) | Isolated application VPC |
+| **Public Subnet A** | `subnet-0d56b8940e2f2a83f` (10.0.1.0/24) | For EC2 Web Server |
+| **Private Subnet A** | `subnet-019d8efc766323b78` (10.0.11.0/24) | RDS MySQL Primary |
+| **Private Subnet B** | `subnet-0b12ef6ddb3a17e81` (10.0.12.0/24) | RDS MySQL Secondary |
+| **Web Security Group** | `sg-0b6b4c13f32db1a3d` (`Public-EC2-SG`) | Port 80 (HTTP) & 22 (SSH) |
+| **DB Security Group** | `sg-00c338d5b5ef3594e` (`cryptovote-db-sg`) | Port 3306 open ONLY to `Public-EC2-SG` |
+| **Amazon RDS MySQL** | `cryptovote-mysql` (`db.t3.micro`) | Managed MySQL Database (`cryptovote_db`) |
+| **Amazon S3 Bucket** | `cryptovote-audit-882478410161` | Audit storage for `results.json` & `chain.json` |
 
-### B. GitHub Repository
-1. **Repository Setup:**
-   - Repository Name: `cryptovote` (Private).
-   - Collaborators: Both Person A and Person B added.
-   - Branches:
-     - `main` (production / merged code)
-     - `person-b-backend` (Person B's active branch)
-     - `person-a-infra` (Person A's active branch)
+---
 
-### C. AWS Infrastructure Parameters (Once Deployed in Hours 1–4)
-Please fill out and return the following variables so Person B can configure the backend connection:
+## 2. AWS Parameter Store Paths Created
 
-```env
-# AWS Infrastructure Config Needed by Person B
-AWS_REGION=ap-south-1
-RDS_MYSQL_HOST=<your-rds-endpoint.ap-south-1.rds.amazonaws.com>
-RDS_MYSQL_PORT=3306
-RDS_MYSQL_DB=cryptovote_db
-RDS_MYSQL_USER=<db-master-username>
-RDS_MYSQL_PASSWORD=<db-master-password>
+All configuration is managed securely in Systems Manager Parameter Store:
 
-S3_BUCKET_NAME=<your-s3-bucket-name>
-PARAMETER_STORE_PREFIX=/cryptovote/
-EC2_PUBLIC_IP=<ec2-public-ip-for-frontend-testing>
+- `/cryptovote/s3_bucket`: `cryptovote-audit-882478410161`
+- `/cryptovote/admin_secret`: `AdminSecretCryptoVote2026!` *(SecureString)*
+- `/cryptovote/aws_region`: `ap-south-1`
+- `/cryptovote/db_name`: `cryptovote_db`
+- `/cryptovote/db_user`: `admin`
+- `/cryptovote/db_password`: `CryptoVoteDBPass2026!` *(SecureString)*
+
+---
+
+## 3. Person A's Action Items (Frontend & EC2 Deployment)
+
+### Task A: Frontend Development
+1. Place all your frontend files in the `static/` directory:
+   - `static/index.html`
+   - `static/style.css`
+   - `static/app.js`
+2. Flask will automatically serve these static files.
+3. The frontend should call the 9 REST endpoints listed below using standard `fetch()` calls.
+
+### Task B: EC2 Launch & Gunicorn Service
+1. Launch a `t3.micro` EC2 instance in **Public Subnet A** (`subnet-0d56b8940e2f2a83f`).
+2. Attach the Web Security Group (`sg-0b6b4c13f32db1a3d`).
+3. Attach an IAM Instance Profile Role with policies:
+   - `AmazonSSMManagedInstanceCore`
+   - `ssm:GetParametersByPath` on `/cryptovote/*`
+   - `s3:PutObject` on `arn:aws:s3:::cryptovote-audit-882478410161/*`
+4. On the EC2 instance, clone the repository and run:
+```bash
+sudo yum install -y git python3 python3-pip
+git clone https://github.com/HarmanSinghArora/cryptovote.git
+cd cryptovote
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Run RDS Migration script to load db/schema.sql into MySQL
+python db/migrate_to_rds.py
+
+# Install systemd service for production background running
+sudo cp cryptovote.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now cryptovote
 ```
 
 ---
 
-## 2. Agreed API JSON Contract (Person B is implementing these)
-
-Person A can build the frontend (HTML/JS) against these exact endpoints and JSON schemas:
+## 4. Complete API Contract for Frontend Integration
 
 ### 1. `GET /candidates`
-- **Purpose:** Fetches the list of active election candidates.
-- **Request:** None
 - **Response `200 OK`:**
 ```json
 {
   "candidates": [
-    {"id": 1, "name": "Alice Green", "party": "Forward Party"},
-    {"id": 2, "name": "Bob Stone", "party": "Unity Alliance"}
+    {"id": 1, "name": "Alice Green", "party": "Cyber Security Party"},
+    {"id": 2, "name": "Bob Stone", "party": "Cloud Computing Alliance"},
+    {"id": 3, "name": "Charlie Vance", "party": "Innovation Coalition"}
   ]
 }
 ```
 
 ### 2. `POST /register`
-- **Purpose:** Registers an eligible voter with a salted PBKDF2 hashed password.
 - **Request Body:**
 ```json
-{
-  "voter_id": "VOTER101",
-  "password": "SecurePassword123"
-}
+{"voter_id": "VOTER101", "password": "SecurePassword123"}
 ```
 - **Response `201 Created`:**
 ```json
-{
-  "message": "Voter registered successfully",
-  "voter_id": "VOTER101"
-}
+{"message": "Voter registered successfully", "voter_id": "VOTER101"}
 ```
 
 ### 3. `POST /login`
-- **Purpose:** Authenticates voter credentials and returns a session token.
 - **Request Body:**
 ```json
-{
-  "voter_id": "VOTER101",
-  "password": "SecurePassword123"
-}
+{"voter_id": "VOTER101", "password": "SecurePassword123"}
 ```
 - **Response `200 OK`:**
 ```json
-{
-  "message": "Login successful",
-  "token": "session_uuid_or_jwt_token",
-  "voter_id": "VOTER101",
-  "has_voted": false
-}
+{"message": "Login successful", "token": "session_token_hex", "voter_id": "VOTER101"}
 ```
 
-### 4. `POST /blind-sign`
-- **Purpose:** Signs a blinded vote message without revealing the voter's candidate choice.
-- **Headers:** `Authorization: Bearer <session_token>`
+### 4. `GET /crypto/public-key`
+- **Response `200 OK`:**
+```json
+{"e": "65537", "n": "<2048-bit modulus integer>", "algorithm": "RSA-2048-Blind-Signature"}
+```
+
+### 5. `POST /blind-sign`
+- **Header:** `Authorization: Bearer <session_token>`
+- **Request Body:** `{"blinded_message": "<m' integer string>"}`
+- **Response `200 OK`:** `{"blind_signature": "<s' integer string>"}`
+
+### 6. `POST /vote` (ANONYMOUS - No voter ID or auth token!)
 - **Request Body:**
 ```json
-{
-  "blinded_message": "<integer or hex string representing m * r^e mod N>"
-}
+{"candidate_id": 1, "token": "anonymous_ballot_token", "signature": "<unblinded signature s>"}
 ```
 - **Response `200 OK`:**
 ```json
-{
-  "blind_signature": "<integer or hex string representing s' = (m*r^e)^d mod N>"
-}
+{"message": "Vote recorded successfully", "receipt_hash": "sha256_entry_hash", "block_index": 1}
 ```
 
-### 5. `POST /vote`
-- **Purpose:** Verifies unblinded signature, checks against duplicate tokens, and appends the vote to the SHA-256 hash chain.
-- **Request Body (Anonymous submission - no voter identity):**
-```json
-{
-  "candidate_id": 1,
-  "token": "<unique anonymous token generated during blinding>",
-  "signature": "<unblinded signature s = m^d mod N>"
-}
-```
+### 7. `GET /receipt/<receipt_hash>`
 - **Response `200 OK`:**
 ```json
-{
-  "message": "Vote recorded successfully",
-  "receipt_hash": "sha256_entry_hash_of_this_vote",
-  "timestamp": "2026-10-28T15:00:00Z"
-}
+{"verified": true, "block_index": 1, "candidate_id": 1, "receipt_hash": "...", "previous_hash": "..."}
 ```
 
-### 6. `GET /receipt/<receipt_hash>`
-- **Purpose:** Verifies that a vote exists in the ledger/hash chain.
-- **Response `200 OK`:**
-```json
-{
-  "verified": true,
-  "block_index": 4,
-  "timestamp": "2026-10-28T15:00:00Z",
-  "receipt_hash": "sha256_entry_hash_of_this_vote",
-  "previous_hash": "sha256_prev_hash"
-}
-```
-
-### 7. `GET /results`
-- **Purpose:** Returns total vote tallies per candidate.
+### 8. `GET /results`
 - **Response `200 OK`:**
 ```json
 {
@@ -159,39 +149,18 @@ Person A can build the frontend (HTML/JS) against these exact endpoints and JSON
 }
 ```
 
-### 8. `GET /admin/verify-chain`
-- **Purpose:** Recalculates every SHA-256 hash in the chain from genesis to the latest block and proves tamper-evidence.
+### 9. `GET /admin/verify-chain`
 - **Response `200 OK`:**
 ```json
-{
-  "is_valid": true,
-  "total_blocks": 43,
-  "message": "Hash chain verified. All cryptographic links are intact."
-}
+{"is_valid": true, "total_blocks": 43, "details": {"message": "Complete hash chain successfully verified."}}
 ```
 
-### 9. `POST /admin/close`
-- **Purpose:** Closes election, triggers S3 upload of `results.json` and `chain.json`, and sends SNS notification.
+### 10. `POST /admin/close`
 - **Request Body:**
 ```json
-{
-  "admin_secret": "<ADMIN_SECRET_KEY>"
-}
+{"admin_secret": "AdminSecretCryptoVote2026!"}
 ```
 - **Response `200 OK`:**
 ```json
-{
-  "message": "Election closed successfully",
-  "s3_results_url": "s3://cryptovote-bucket/results.json",
-  "s3_chain_url": "s3://cryptovote-bucket/chain.json"
-}
+{"message": "Election closed successfully", "s3_status": "Successfully uploaded results.json and chain.json to s3://cryptovote-audit-882478410161"}
 ```
-
----
-
-## 3. Deliverables Person B Will Provide to Person A
-
-1. **`db/schema.sql`**: Complete MySQL DDL script with initial candidate seeds, ready to be executed on RDS.
-2. **`crypto/blind_rsa.py` & `crypto/hashchain.py`**: Tested cryptographic modules.
-3. **`client.py`**: A standalone test client demonstrating voter blinding, signing, unblinding, and voting.
-4. **Flask Application (`backend/`)**: Packaged with `requirements.txt` and systemd/gunicorn instructions for EC2.
