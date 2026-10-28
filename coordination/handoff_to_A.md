@@ -20,7 +20,7 @@ The backend and database components are fully provisioned and tested:
 | **Private Subnet B** | `subnet-0b12ef6ddb3a17e81` (10.0.12.0/24) | RDS MySQL Secondary |
 | **Web Security Group** | `sg-0b6b4c13f32db1a3d` (`Public-EC2-SG`) | Port 80 (HTTP) & 22 (SSH) |
 | **DB Security Group** | `sg-00c338d5b5ef3594e` (`cryptovote-db-sg`) | Port 3306 open ONLY to `Public-EC2-SG` |
-| **Amazon RDS MySQL** | `cryptovote-mysql` (`db.t3.micro`) | Managed MySQL Database (`cryptovote_db`) |
+| **Amazon RDS MySQL** | `cryptovote-mysql.cto2m08cuqe2.ap-south-1.rds.amazonaws.com` | Managed MySQL Database (`cryptovote_db`, Port 3306) |
 | **Amazon S3 Bucket** | `cryptovote-audit-882478410161` | Audit storage for `results.json` & `chain.json` |
 
 ---
@@ -35,6 +35,7 @@ All configuration is managed securely in Systems Manager Parameter Store:
 - `/cryptovote/db_name`: `cryptovote_db`
 - `/cryptovote/db_user`: `admin`
 - `/cryptovote/db_password`: `CryptoVoteDBPass2026!` *(SecureString)*
+- `/cryptovote/database_url`: `mysql+pymysql://admin:CryptoVoteDBPass2026!@cryptovote-mysql.cto2m08cuqe2.ap-south-1.rds.amazonaws.com:3306/cryptovote_db` *(SecureString)*
 
 ---
 
