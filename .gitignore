@@ -5,6 +5,7 @@ __pycache__/
 venv/
 .venv/
 env/
+*.zip
 
 # Environment files & secrets (NEVER commit credentials!)
 .env

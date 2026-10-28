@@ -73,6 +73,34 @@ def create_app(config_class=Config):
             db.session.rollback()
             print(f"[!] Audit log error: {e}")
 
+    def publish_sns_alert(subject, message):
+        """Publishes critical alerts to Amazon SNS topic if configured."""
+        topic_arn = os.environ.get('SNS_TOPIC_ARN') or app.config.get('SNS_TOPIC_ARN')
+        if not topic_arn:
+            try:
+                import boto3
+                ssm = boto3.client('ssm', region_name=app.config.get('AWS_REGION', 'ap-south-1'))
+                param = ssm.get_parameter(Name='/cryptovote/sns_topic_arn')
+                topic_arn = param['Parameter']['Value']
+            except Exception:
+                topic_arn = None
+
+        if topic_arn:
+            try:
+                import boto3
+                sns = boto3.client('sns', region_name=app.config.get('AWS_REGION', 'ap-south-1'))
+                sns.publish(
+                    TopicArn=topic_arn,
+                    Subject=subject[:100],
+                    Message=message
+                )
+                print(f"[+] Successfully published SNS alert to {topic_arn}!")
+                log_audit('SNS_ALERT_SENT', f"SNS alert sent: {subject}")
+            except Exception as e:
+                print(f"[!] Failed to publish SNS alert: {e}")
+        else:
+            print(f"[i] SNS_TOPIC_ARN not configured. Simulated SNS Alert: {subject}")
+
     # =========================================================================
     # 0. SYSTEM & CRYPTO METADATA ENDPOINTS
     # =========================================================================
@@ -362,6 +390,17 @@ def create_app(config_class=Config):
     def admin_verify_chain():
         votes = Vote.query.order_by(Vote.id.asc()).all()
         is_valid, details = HashChainLedger.verify_chain(votes)
+
+        if not is_valid:
+            alert_msg = (
+                f"CRITICAL: CryptoVote Hash-Chain Integrity Verification FAILED!\n\n"
+                f"Error: {details.get('error')}\n"
+                f"Block Index: {details.get('block_index')}\n"
+                f"Timestamp: {datetime.now(timezone.utc).isoformat()}\n\n"
+                f"Immediate administrative intervention required. Please inspect the audit log."
+            )
+            publish_sns_alert("CRITICAL ALERT: CryptoVote Hash Chain Tampering Detected!", alert_msg)
+            log_audit('CHAIN_TAMPER_DETECTED', f"Tamper detected: {details.get('error')}")
 
         return jsonify({
             'is_valid': is_valid,
