@@ -168,5 +168,17 @@ class TestCryptoVoteAPI(unittest.TestCase):
         self.assertEqual(res_blocked.status_code, 403)
         print("  [PASS] Endpoint: POST /admin/close (Election closed & voting locked)")
 
+    def test_05_forged_token_rejection(self):
+        # Professor's Test: Vote with forged token -> Rejected; INVALID_TOKEN appears in logs
+        forged_payload = {
+            'candidate_id': 1,
+            'token': f"forged_token_{secrets.token_hex(16)}",
+            'signature': '99999999999999999999999999'  # Forged fake signature
+        }
+        res_forged = self.client.post('/vote', json=forged_payload)
+        self.assertEqual(res_forged.status_code, 400)
+        self.assertEqual(res_forged.json.get('code'), 'INVALID_TOKEN')
+        print("  [PASS] Forged token rejected with 400 Bad Request & code=INVALID_TOKEN")
+
 if __name__ == '__main__':
     unittest.main()

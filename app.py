@@ -292,8 +292,9 @@ def create_app(config_class=Config):
         m = hash_to_int(ballot_raw, pub_key['n'])
 
         if not verify_signature(m, sig_int, pub_key['e'], pub_key['n']):
-            log_audit('VOTE_REJECTED', f"Invalid signature for candidate {candidate_id}.")
-            return jsonify({'error': 'Invalid cryptographic signature. Vote rejected.'}), 400
+            print(f"[!] INVALID_TOKEN: Forged or invalid cryptographic signature for candidate {candidate_id}")
+            log_audit('INVALID_TOKEN', f"INVALID_TOKEN: Forged ballot signature detected for candidate {candidate_id}")
+            return jsonify({'error': 'Invalid cryptographic signature. Vote rejected.', 'code': 'INVALID_TOKEN'}), 400
 
         # 2. Prevent Double Voting via Used Token Table
         token_hash = hashlib.sha256(token.encode('utf-8')).hexdigest()
