@@ -12,6 +12,8 @@ env/
 *.key
 *.id_rsa
 *.pub
+keys/
+exports/
 
 # Local SQLite databases
 *.db

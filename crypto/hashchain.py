@@ -46,8 +46,14 @@ class HashChainLedger:
 
     @staticmethod
     def compute_vote_hash(block_index, candidate_id, token, signature, previous_hash, timestamp_str):
-        """Utility function to calculate a vote's entry hash."""
-        payload = f"{block_index}|{timestamp_str}|{candidate_id}|{token}|{str(signature)}|{previous_hash}"
+        """Utility function to calculate a vote's entry hash with consistent timestamp serialization."""
+        if hasattr(timestamp_str, 'strftime'):
+            ts_clean = timestamp_str.strftime('%Y-%m-%dT%H:%M:%SZ')
+        elif isinstance(timestamp_str, str):
+            ts_clean = timestamp_str.replace('+00:00', 'Z')
+        else:
+            ts_clean = str(timestamp_str)
+        payload = f"{block_index}|{ts_clean}|{candidate_id}|{token}|{str(signature)}|{previous_hash}"
         return hashlib.sha256(payload.encode('utf-8')).hexdigest()
 
     @staticmethod
@@ -63,29 +69,31 @@ class HashChainLedger:
             return True, {"message": "Chain is empty.", "verified_blocks": 0}
 
         for i, block in enumerate(blocks):
+            block_idx = getattr(block, 'block_index', getattr(block, 'id', i + 1))
             # Verify linkage to previous block
             if i == 0:
                 # First block must point to genesis previous hash
                 if block.previous_hash != GENESIS_PREV_HASH:
                     return False, {
                         "error": "Genesis block previous_hash is invalid.",
-                        "block_index": block.block_index,
+                        "block_index": block_idx,
                         "expected": GENESIS_PREV_HASH,
                         "found": block.previous_hash
                     }
             else:
                 prev_block = blocks[i - 1]
+                prev_idx = getattr(prev_block, 'block_index', getattr(prev_block, 'id', i))
                 if block.previous_hash != prev_block.entry_hash:
                     return False, {
-                        "error": f"Chain broken between block {prev_block.block_index} and block {block.block_index}.",
-                        "block_index": block.block_index,
+                        "error": f"Chain broken between block {prev_idx} and block {block_idx}.",
+                        "block_index": block_idx,
                         "expected_prev_hash": prev_block.entry_hash,
                         "found_prev_hash": block.previous_hash
                     }
 
             # Verify block self-integrity
             recalculated_hash = HashChainLedger.compute_vote_hash(
-                block.block_index,
+                block_idx,
                 block.candidate_id,
                 block.token,
                 block.signature,
@@ -95,8 +103,8 @@ class HashChainLedger:
 
             if block.entry_hash != recalculated_hash:
                 return False, {
-                    "error": f"Block {block.block_index} data has been tampered with!",
-                    "block_index": block.block_index,
+                    "error": f"Block {block_idx} data has been tampered with!",
+                    "block_index": block_idx,
                     "expected_entry_hash": recalculated_hash,
                     "found_entry_hash": block.entry_hash
                 }

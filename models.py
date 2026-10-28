@@ -3,10 +3,16 @@ CryptoVote SQLAlchemy Models
 Defines the database schema and object-relational mapping for candidates, voters,
 used tokens, the cryptographic vote hash-chain ledger, and audit logs.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
+
+def utc_now_str():
+    return datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+def utc_now():
+    return datetime.now(timezone.utc)
 
 class Candidate(db.Model):
     __tablename__ = 'candidates'
@@ -15,7 +21,7 @@ class Candidate(db.Model):
     name = db.Column(db.String(100), nullable=False)
     party = db.Column(db.String(100), nullable=False)
     bio = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utc_now)
 
     votes = db.relationship('Vote', backref='candidate', lazy=True)
 
@@ -36,7 +42,7 @@ class Voter(db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     salt = db.Column(db.String(64), nullable=False)
     has_requested_ballot = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utc_now)
 
     def to_dict(self):
         return {
@@ -51,7 +57,7 @@ class UsedToken(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     token_hash = db.Column(db.String(64), unique=True, nullable=False, index=True)
-    used_at = db.Column(db.DateTime, default=datetime.utcnow)
+    used_at = db.Column(db.DateTime, default=utc_now)
 
 
 class Vote(db.Model):
@@ -63,7 +69,11 @@ class Vote(db.Model):
     signature = db.Column(db.Text, nullable=False)
     previous_hash = db.Column(db.String(64), nullable=False)
     entry_hash = db.Column(db.String(64), unique=True, nullable=False, index=True)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.String(32), default=utc_now_str, nullable=False)
+
+    @property
+    def block_index(self):
+        return self.id
 
     def to_dict(self):
         return {
@@ -72,7 +82,7 @@ class Vote(db.Model):
             'token': self.token,
             'previous_hash': self.previous_hash,
             'entry_hash': self.entry_hash,
-            'timestamp': self.timestamp.isoformat() if self.timestamp else None
+            'timestamp': str(self.timestamp)
         }
 
 
@@ -83,7 +93,7 @@ class AuditLog(db.Model):
     event_type = db.Column(db.String(50), nullable=False)
     description = db.Column(db.Text, nullable=False)
     ip_address = db.Column(db.String(45), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utc_now)
 
     def to_dict(self):
         return {
