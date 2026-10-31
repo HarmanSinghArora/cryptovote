@@ -114,7 +114,7 @@ def create_app(config_class=Config):
             return render_template('index.html')
 
         return jsonify({
-            'service': 'CryptoVote REST API',
+            'service': 'CrypticVote REST API',
             'status': 'HEALTHY',
             'version': '1.0.0',
             'election_status': 'OPEN' if election_state['is_open'] else 'CLOSED',
@@ -419,13 +419,13 @@ def create_app(config_class=Config):
 
         if not is_valid:
             alert_msg = (
-                f"CRITICAL: CryptoVote Hash-Chain Integrity Verification FAILED!\n\n"
+                f"CRITICAL: CrypticVote Hash-Chain Integrity Verification FAILED!\n\n"
                 f"Error: {details.get('error')}\n"
                 f"Block Index: {details.get('block_index')}\n"
                 f"Timestamp: {datetime.now(timezone.utc).isoformat()}\n\n"
                 f"Immediate administrative intervention required. Please inspect the audit log."
             )
-            publish_sns_alert("CRITICAL ALERT: CryptoVote Hash Chain Tampering Detected!", alert_msg)
+            publish_sns_alert("CRITICAL ALERT: CrypticVote Hash Chain Tampering Detected!", alert_msg)
             log_audit('CHAIN_TAMPER_DETECTED', f"Tamper detected: {details.get('error')}")
 
         return jsonify({

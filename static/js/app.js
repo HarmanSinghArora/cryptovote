@@ -1,5 +1,5 @@
 /**
- * CryptoVote Frontend Logic & Client-Side Cryptography
+ * CrypticVote Frontend Logic & Client-Side Cryptography
  * Cyber Brutalism Implementation with native BigInt David Chaum Blind Signatures.
  */
 
@@ -224,13 +224,23 @@ async function loadCandidates() {
                 <div class="candidate-brutalist-card">
                     <div class="candidate-media-box">
                         <span class="candidate-num-tag">[ CANDIDATE 0${c.id} ]</span>
-                        <div class="candidate-avatar">🏛️</div>
+                        <div class="candidate-avatar">
+                        <svg width="52" height="52" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="12" y="12" width="40" height="40" stroke="#7c3aed" stroke-width="2"/>
+                            <circle cx="32" cy="27" r="8" stroke="#ccff00" stroke-width="2"/>
+                            <path d="M20 48C20 41 25 39 32 39C39 39 44 41 44 48" stroke="#ffffff" stroke-width="2" stroke-linecap="square"/>
+                            <line x1="6" y1="32" x2="12" y2="32" stroke="#7c3aed" stroke-width="2"/>
+                            <line x1="52" y1="32" x2="58" y2="32" stroke="#7c3aed" stroke-width="2"/>
+                            <line x1="32" y1="6" x2="32" y2="12" stroke="#7c3aed" stroke-width="2"/>
+                            <line x1="32" y1="52" x2="32" y2="58" stroke="#7c3aed" stroke-width="2"/>
+                        </svg>
+                    </div>
                     </div>
                     <div class="candidate-info-box">
                         <div>
                             <div class="candidate-name">${c.name}</div>
                             <div class="candidate-party">PARTY // ${c.party}</div>
-                            <p class="candidate-bio">${c.bio || 'Official vetted candidate standing for the 2026 CryptoVote general election.'}</p>
+                            <p class="candidate-bio">${c.bio || 'Official vetted candidate standing for the 2026 CrypticVote general election.'}</p>
                         </div>
                         <button onclick="selectAndVote(${c.id})" class="btn btn-purple" style="width: 100%;">
                             Vote for ${c.name} ↗
@@ -286,7 +296,7 @@ async function executeAnonymousVote(e) {
     const candidateId = parseInt(selectedRadio.value);
     const voteBtn = document.getElementById('btn-submit-vote');
     voteBtn.disabled = true;
-    voteBtn.textContent = '🔒 BLINDING BALLOT & GENERATING PROOF...';
+    voteBtn.textContent = '>> [1/3] BLINDING BALLOT & PROOF GEN...';
 
     try {
         // Step 1: Fetch Authority RSA Public Key
@@ -310,7 +320,7 @@ async function executeAnonymousVote(e) {
         const m_prime = (m * r_pow_e) % pubKey.n;
 
         // Step 3: Call POST /blind-sign with m' (Identity Known, Ballot Choice HIDDEN)
-        voteBtn.textContent = '✍️ REQUESTING BLIND SIGNATURE FROM AUTHORITY...';
+        voteBtn.textContent = '>> [2/3] AUTHORITY BLIND SIGNATURE...';
         const signRes = await fetch('/blind-sign', {
             method: 'POST',
             headers: {
@@ -328,7 +338,7 @@ async function executeAnonymousVote(e) {
         const s_prime = BigInt(signData.blind_signature);
 
         // Step 4: Unblind signature locally: s = (s' * r^-1) mod N
-        voteBtn.textContent = '🔓 UNBLINDING SIGNATURE & CASTING ANONYMOUSLY...';
+        voteBtn.textContent = '>> [3/3] UNBLINDING & CASTING ON-CHAIN...';
         const r_inv = modInverse(r, pubKey.n);
         const s = (s_prime * r_inv) % pubKey.n;
 
@@ -474,8 +484,9 @@ async function adminVerifyChain() {
         if (data.is_valid) {
             out.innerHTML = `
                 <div class="cyber-panel" style="border-color: var(--success); background: #ffffff;">
-                    <div style="color: var(--success); font-family: var(--font-mono); font-weight: 800; margin-bottom: 0.5rem;">
-                        ✅ SHA-256 HASH CHAIN INTEGRITY CONFIRMED
+                    <div style="color: var(--success); font-family: var(--font-mono); font-weight: 800; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><polyline points="20 6 9 17 4 12"/></svg>
+                        <span>SHA-256 HASH CHAIN INTEGRITY CONFIRMED // ALL BLOCKS LINKED</span>
                     </div>
                     <p style="font-family: var(--font-mono); font-size: 0.88rem;">All ${data.total_blocks} vote blocks are cryptographically verified back to Genesis.</p>
                     <p style="color: var(--text-muted); font-family: var(--font-mono); font-size: 0.82rem; margin-top: 0.5rem;">${data.details.message}</p>
@@ -484,8 +495,9 @@ async function adminVerifyChain() {
         } else {
             out.innerHTML = `
                 <div class="cyber-panel" style="border-color: var(--danger); background: var(--danger-light);">
-                    <div style="color: var(--danger); font-family: var(--font-mono); font-weight: 800; margin-bottom: 0.5rem;">
-                        🚨 TAMPER DETECTED: CRYPTOGRAPHIC LINK BROKEN!
+                    <div style="color: var(--danger); font-family: var(--font-mono); font-weight: 800; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><polygon points="12 2 22 20 2 20 12 2"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        <span>TAMPER DETECTED: CRYPTOGRAPHIC LINK BROKEN!</span>
                     </div>
                     <p style="font-family: var(--font-mono); font-size: 0.88rem;">Discrepancy identified at ledger block index #${data.details.block_index}.</p>
                     <p style="color: var(--danger); font-family: var(--font-mono); font-weight: 700;">${data.details.error}</p>
@@ -542,3 +554,4 @@ document.addEventListener('DOMContentLoaded', () => {
         if (input) input.value = state.lastReceiptHash;
     }
 });
+
