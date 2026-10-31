@@ -18,7 +18,9 @@ import json
 
 from crypto.blind_rsa import hash_to_int, blind_message, unblind_signature
 
-BASE_URL = "http://127.0.0.1:5000"
+import os
+
+BASE_URL = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("SERVER_URL", "http://127.0.0.1:5000")
 
 def run_simulation():
     print("=" * 70)

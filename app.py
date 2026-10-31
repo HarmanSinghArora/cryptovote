@@ -7,6 +7,7 @@ import os
 import json
 import secrets
 import hashlib
+import hmac
 from datetime import datetime, timezone
 from flask import Flask, request, jsonify, render_template
 
@@ -204,7 +205,10 @@ def create_app(config_class=Config):
             return jsonify({'error': 'Invalid credentials'}), 401
 
         # Generate secure random session token
-        session_token = secrets.token_hex(24)
+        # Generate cryptographically signed stateless session token
+        ts = str(int(datetime.now(timezone.utc).timestamp()))
+        sig = hmac.new(app.config['SECRET_KEY'].encode('utf-8'), f"{voter_id}:{ts}".encode('utf-8'), hashlib.sha256).hexdigest()
+        session_token = f"{voter_id}.{ts}.{sig}"
         active_sessions[session_token] = voter_id
 
         log_audit('VOTER_LOGIN', f"Voter {voter_id} logged in.")
@@ -229,10 +233,16 @@ def create_app(config_class=Config):
         auth_header = request.headers.get('Authorization', '')
         token = auth_header.replace('Bearer ', '').strip()
 
-        if not token or token not in active_sessions:
+        voter_id = active_sessions.get(token)
+        if not voter_id and '.' in token:
+            parts = token.split('.')
+            if len(parts) == 3:
+                vid, ts, sig = parts
+                expected_sig = hmac.new(app.config['SECRET_KEY'].encode('utf-8'), f"{vid}:{ts}".encode('utf-8'), hashlib.sha256).hexdigest()
+                if hmac.compare_digest(sig, expected_sig):
+                    voter_id = vid
+        if not voter_id:
             return jsonify({'error': 'Unauthorized: Valid session token required'}), 401
-
-        voter_id = active_sessions[token]
         voter = Voter.query.filter_by(voter_id=voter_id).first()
 
         if not voter:
