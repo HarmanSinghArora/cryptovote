@@ -516,3 +516,4 @@ document.addEventListener('DOMContentLoaded', () => {
         if (input) input.value = state.lastReceiptHash;
     }
 });
+
