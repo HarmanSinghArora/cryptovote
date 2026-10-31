@@ -102,7 +102,28 @@ def create_app(config_class=Config):
         else:
             print(f"[i] SNS_TOPIC_ARN not configured. Simulated SNS Alert: {subject}")
 
+    
     # =========================================================================
+    # CORS HEADERS & PREFLIGHT HANDLING
+    # =========================================================================
+
+    @app.after_request
+    def add_cors_headers(response):
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, PUT, DELETE'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Admin-Secret, Accept'
+        return response
+
+    @app.route('/<path:path>', methods=['OPTIONS'])
+    @app.route('/', methods=['OPTIONS'])
+    def handle_options(path=None):
+        response = app.make_default_options_response()
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS, PUT, DELETE'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Admin-Secret, Accept'
+        return response, 200
+
+# =========================================================================
     # 0. SYSTEM & CRYPTO METADATA ENDPOINTS
     # =========================================================================
 

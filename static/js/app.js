@@ -13,6 +13,14 @@ const state = {
     lastReceiptHash: localStorage.getItem('last_receipt') || null
 };
 
+// Dynamic API Resolver: automatically forwards to live EC2 when loaded via file://
+function apiUrl(path) {
+    if (typeof window !== 'undefined' && (window.location.protocol === 'file:' || !window.location.host)) {
+        return `http://15.206.173.159${path}`;
+    }
+    return path;
+}
+
 // ============================================================================
 // 1. LIVE SYSTEM TIME CLOCK
 // ============================================================================
@@ -32,8 +40,104 @@ function startSystemClock() {
 }
 
 // ============================================================================
-// 2. BIGINT CRYPTOGRAPHIC UTILITIES (DAVID CHAUM RSA BLIND SIGNATURES)
 // ============================================================================
+// 2. CRYPTOGRAPHIC UTILITIES (UNIVERSAL CLIENT SHA-256 & DAVID CHAUM RSA)
+// ============================================================================
+
+function sha256_pure_js(ascii) {
+    function rightRotate(value, amount) {
+        return (value >>> amount) | (value << (32 - amount));
+    }
+    var mathPow = Math.pow;
+    var maxWord = mathPow(2, 32);
+    var lengthProperty = 'length';
+    var i, j;
+    var result = '';
+    var words = [];
+    var asciiBitLength = ascii[lengthProperty] * 8;
+    
+    var hash = [
+        0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+        0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+    ];
+
+    var k = [
+        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+        0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+        0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+        0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+        0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+        0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+        0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+        0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+    ];
+
+    ascii += '\x80';
+    while (ascii[lengthProperty] % 64 - 56) ascii += '\x00';
+    for (i = 0; i < ascii[lengthProperty]; i++) {
+        j = ascii.charCodeAt(i);
+        words[i >> 2] |= j << ((3 - i) % 4) * 8;
+    }
+    words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);
+    words[words[lengthProperty]] = (asciiBitLength | 0);
+
+    for (j = 0; j < words[lengthProperty];) {
+        var w = words.slice(j, j += 16);
+        var oldHash = hash;
+        hash = hash.slice(0, 8);
+
+        for (i = 0; i < 64; i++) {
+            var i2 = i + j;
+            var w15 = w[i - 15], w2 = w[i - 2];
+
+            var a = hash[0], e = hash[4];
+            var temp1 = hash[7]
+                + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+                + ((e & hash[5]) ^ ((~e) & hash[6]))
+                + k[i]
+                + (w[i] = (i < 16) ? w[i] : (
+                        w[i - 16]
+                        + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+                        + w[i - 7]
+                        + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+                    ) | 0
+                );
+            var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+                + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+
+            hash = [(temp1 + temp2) | 0].concat(hash);
+            hash[4] = (hash[4] + temp1) | 0;
+        }
+
+        for (i = 0; i < 8; i++) {
+            hash[i] = (hash[i] + oldHash[i]) | 0;
+        }
+    }
+
+    for (i = 0; i < 8; i++) {
+        for (j = 3; j + 1; j--) {
+            var b = (hash[i] >> (j * 8)) & 255;
+            result += ((b < 16) ? 0 : '') + b.toString(16);
+        }
+    }
+    return result;
+}
+
+function getRandomBytes(length) {
+    const arr = new Uint8Array(length);
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+        try {
+            window.crypto.getRandomValues(arr);
+            return arr;
+        } catch (e) {
+            // fallback below
+        }
+    }
+    for (let i = 0; i < length; i++) {
+        arr[i] = Math.floor(Math.random() * 256);
+    }
+    return arr;
+}
 
 function modPow(base, exp, mod) {
     let res = 1n;
@@ -61,22 +165,29 @@ function modInverse(a, m) {
 }
 
 async function sha256ToInt(str, modN) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(str);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    let hex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    let hex;
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle && window.crypto.subtle.digest) {
+        try {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(str);
+            const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            hex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        } catch (e) {
+            hex = sha256_pure_js(str);
+        }
+    } else {
+        hex = sha256_pure_js(str);
+    }
     return BigInt('0x' + hex) % modN;
 }
 
 function getRandomBigInt(bytes = 32) {
-    const arr = new Uint8Array(bytes);
-    crypto.getRandomValues(arr);
+    const arr = getRandomBytes(bytes);
     let hex = Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
     return BigInt('0x' + hex);
 }
 
-// ============================================================================
 // 3. UI NAVIGATION & NOTIFICATION HELPERS
 // ============================================================================
 
@@ -141,7 +252,7 @@ function logout() {
 async function fetchAuthorityPublicKey() {
     if (state.authorityKey) return state.authorityKey;
     try {
-        const res = await fetch('/crypto/public-key');
+        const res = await fetch(apiUrl('/crypto/public-key'));
         const data = await res.json();
         state.authorityKey = {
             e: BigInt(data.e),
@@ -160,7 +271,7 @@ async function handleRegister(e) {
     const password = document.getElementById('reg-password').value.trim();
 
     try {
-        const res = await fetch('/register', {
+        const res = await fetch(apiUrl('/register'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ voter_id: voterId, password: password })
@@ -174,7 +285,7 @@ async function handleRegister(e) {
             showAlert('reg-alert', data.error || 'Registration failed');
         }
     } catch (err) {
-        showAlert('reg-alert', 'Network error connecting to API server');
+        showAlert('reg-alert', `Network error: ${err.message || 'Cannot connect to API server'}`); console.error('Register failed:', err);
     }
 }
 
@@ -184,7 +295,7 @@ async function handleLogin(e) {
     const password = document.getElementById('login-password').value.trim();
 
     try {
-        const res = await fetch('/login', {
+        const res = await fetch(apiUrl('/login'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ voter_id: voterId, password: password })
@@ -207,13 +318,13 @@ async function handleLogin(e) {
             showAlert('login-alert', data.error || 'Invalid credentials');
         }
     } catch (err) {
-        showAlert('login-alert', 'Network error connecting to API server');
+        showAlert('login-alert', `Network error: ${err.message || 'Cannot connect to API server'}`); console.error('Login failed:', err);
     }
 }
 
 async function loadCandidates() {
     try {
-        const res = await fetch('/candidates');
+        const res = await fetch(apiUrl('/candidates'));
         const data = await res.json();
         state.candidates = data.candidates || [];
 
@@ -304,8 +415,7 @@ async function executeAnonymousVote(e) {
         if (!pubKey) throw new Error("Could not fetch election authority public key");
 
         // Step 2: Generate random anonymous token T and secret blinding factor r
-        const tokenArr = new Uint8Array(16);
-        crypto.getRandomValues(tokenArr);
+        const tokenArr = getRandomBytes(16);
         const token = Array.from(tokenArr).map(b => b.toString(16).padStart(2, '0')).join('');
 
         const rawMessage = `candidate:${candidateId};token:${token}`;
@@ -321,7 +431,7 @@ async function executeAnonymousVote(e) {
 
         // Step 3: Call POST /blind-sign with m' (Identity Known, Ballot Choice HIDDEN)
         voteBtn.textContent = '>> [2/3] AUTHORITY BLIND SIGNATURE...';
-        const signRes = await fetch('/blind-sign', {
+        const signRes = await fetch(apiUrl('/blind-sign'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -343,7 +453,7 @@ async function executeAnonymousVote(e) {
         const s = (s_prime * r_inv) % pubKey.n;
 
         // Step 5: Cast vote anonymously (No session headers!)
-        const voteRes = await fetch('/vote', {
+        const voteRes = await fetch(apiUrl('/vote'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -398,7 +508,7 @@ async function lookupReceipt(hash) {
     resultDiv.innerHTML = '<p style="font-family: var(--font-mono); font-weight: 700;">Querying SHA-256 blockchain ledger...</p>';
 
     try {
-        const res = await fetch(`/receipt/${hash}`);
+        const res = await fetch(apiUrl(`/receipt/${hash}`));
         const data = await res.json();
 
         if (res.ok && data.verified) {
@@ -435,7 +545,7 @@ async function lookupReceipt(hash) {
 
 async function loadResults() {
     try {
-        const res = await fetch('/results');
+        const res = await fetch(apiUrl('/results'));
         const data = await res.json();
 
         const badge = document.getElementById('results-status-badge');
@@ -478,7 +588,7 @@ async function adminVerifyChain() {
     out.innerHTML = '<p style="font-family: var(--font-mono); font-weight: 700;">Recalculating SHA-256 hashes from Genesis block (0^64)...</p>';
 
     try {
-        const res = await fetch('/admin/verify-chain');
+        const res = await fetch(apiUrl('/admin/verify-chain'));
         const data = await res.json();
 
         if (data.is_valid) {
@@ -523,7 +633,7 @@ async function adminCloseElection() {
     }
 
     try {
-        const res = await fetch('/admin/close', {
+        const res = await fetch(apiUrl('/admin/close'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
