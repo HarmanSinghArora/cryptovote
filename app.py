@@ -312,7 +312,12 @@ def create_app(config_class=Config):
         m = hash_to_int(ballot_raw, pub_key['n'])
 
         if not verify_signature(m, sig_int, pub_key['e'], pub_key['n']):
-            print(f"[!] INVALID_TOKEN: Forged or invalid cryptographic signature for candidate {candidate_id}")
+            print(f"[!] INVALID_TOKEN: Forged or invalid cryptographic signature for candidate {candidate_id}", flush=True)
+            try:
+                with open('/var/log/cryptovote.log', 'a') as f_log:
+                    f_log.write(f"[{datetime.now(timezone.utc).isoformat()}] INVALID_TOKEN: Forged ballot signature detected for candidate {candidate_id}\n")
+            except Exception:
+                pass
             log_audit('INVALID_TOKEN', f"INVALID_TOKEN: Forged ballot signature detected for candidate {candidate_id}")
             return jsonify({'error': 'Invalid cryptographic signature. Vote rejected.', 'code': 'INVALID_TOKEN'}), 400
 

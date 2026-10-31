@@ -13,7 +13,7 @@ Environment="AWS_REGION=ap-south-1"
 Environment="PARAMETER_STORE_PREFIX=/cryptovote/"
 
 # Starts Gunicorn on Port 80 with 3 worker processes
-ExecStart=/home/ec2-user/cryptovote/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:80 --access-logfile /var/log/cryptovote_access.log --error-logfile /var/log/cryptovote_error.log wsgi:app
+ExecStart=/home/ec2-user/cryptovote/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:80 --access-logfile /var/log/cryptovote.log --error-logfile /var/log/cryptovote.log --capture-output wsgi:app
 
 Restart=always
 RestartSec=5
