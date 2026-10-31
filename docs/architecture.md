@@ -149,3 +149,4 @@ sequenceDiagram
 - [x] Clear separation between Custom VPC internal subnets and AWS serverless tiers.
 - [x] Zero open SSH ports (management via AWS Systems Manager Session Manager).
 - [x] Database completely shielded in multi-AZ private subnets with zero internet ingress.
+

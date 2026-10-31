@@ -69,3 +69,4 @@ Multi-AZ RDS provisions a synchronous standby replica in a second Availability Z
 2. **AWS Cost Explorer:**
    - Filter by Service: EC2, RDS, and CloudWatch.
    - Granularity: Daily tracking to confirm zero unexpected spikes.
+

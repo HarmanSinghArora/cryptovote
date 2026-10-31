@@ -36,3 +36,4 @@ for i in range(1, 4):
 
 print("\n[+] Successfully submitted 3 invalid tokens!")
 print("[*] Check /var/log/cryptovote.log and CloudWatch log group /cryptovote/application.")
+

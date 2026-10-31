@@ -3,20 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CryptoVote – Secure Online Voting System</title>
+    <title>CryptoVote – Cyber Brutalism Electronic Voting System</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
 
+    <!-- 0. Top Technical Metadata Bar -->
+    <div class="top-technical-bar">
+        <div class="badge-node">
+            <span class="dot"></span>
+            <span>SYS.ID: CCL-882478410161 // REGION: ap-south-1 (MUMBAI)</span>
+        </div>
+        <div>
+            <span>AWS EC2: 15.206.173.159 // RDS: MYSQL_8.0_PRIVATE</span>
+        </div>
+    </div>
+
     <!-- Navigation Header -->
     <header>
         <div class="nav-container">
-            <a href="#" class="logo" onclick="showSection('landing')">
-                🗳️ <span>CryptoVote</span>
-            </a>
+            <div class="logo-wrapper">
+                <a href="#" class="logo" onclick="showSection('landing')">
+                    <span class="pixel-icon">✦</span>
+                    <span>CRYPTOVOTE</span><span class="cursor">_</span>
+                </a>
+            </div>
+            
             <nav>
                 <ul>
-                    <li><a id="nav-landing" class="active" onclick="showSection('landing')">Home</a></li>
+                    <li><a id="nav-landing" class="active" onclick="showSection('landing')">Work</a></li>
                     <li><a id="nav-candidates" onclick="showSection('candidates')">Candidates</a></li>
                     <li><a id="nav-voting" onclick="showSection('voting')">Vote</a></li>
                     <li><a id="nav-receipt" onclick="showSection('receipt')">Receipt</a></li>
@@ -24,206 +39,441 @@
                     <li><a id="nav-admin" onclick="showSection('admin')">Admin</a></li>
                 </ul>
             </nav>
-            <div id="user-session" class="session-info">
-                <!-- Injected via JavaScript -->
+
+            <div class="nav-right">
+                <div class="sys-time-box">
+                    <div>SYS.TIME</div>
+                    <div id="live-sys-time" class="time-val">00:00:00</div>
+                    <div>UTC+0</div>
+                </div>
+                <div id="user-session" class="session-info">
+                    <!-- Populated dynamically via JS -->
+                </div>
             </div>
         </div>
     </header>
 
     <main>
 
-        <!-- 1. Landing Page -->
+        <!-- ==================================================================
+             SECTION /01: HERO BANNER (MATCHING REFERENCE HERO)
+             ================================================================== -->
         <section id="landing" class="section active">
-            <div class="hero">
-                <span class="badge badge-open" style="margin-bottom: 1rem;">Cloud Computing Lab Mini Project</span>
-                <h1>Secure Online Voting System</h1>
-                <p>
-                    A next-generation electronic voting architecture powered by <strong>David Chaum RSA Blind Signatures</strong>, 
-                    <strong>SHA-256 Blockchain Hash Chaining</strong>, and enterprise <strong>Amazon Web Services (AWS)</strong> cloud infrastructure.
-                </p>
-                <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-                    <button onclick="showSection('voting')" class="btn btn-primary" style="width: auto;">Cast Your Vote</button>
-                    <button onclick="showSection('candidates')" class="btn btn-secondary">View Candidates</button>
-                    <button onclick="showSection('results')" class="btn btn-secondary">Live Results</button>
+            
+            <div class="hero-box">
+                <div class="hero-tag-row">
+                    <span>/01 ARCHITECTURE MATRIX</span>
+                    <span>• > PRIVACY: BLIND_RSA // MODULUS: 2048-BIT</span>
                 </div>
-            </div>
 
-            <div class="card-grid">
-                <div class="card">
-                    <h3>🔐 Cryptographic Privacy</h3>
-                    <p>Uses David Chaum's 2048-bit RSA Blind Signatures. The election authority verifies your eligibility and signs your ballot without ever seeing who you voted for.</p>
-                </div>
-                <div class="card">
-                    <h3>⛓️ Tamper-Evident Ledger</h3>
-                    <p>Every ballot is anchored into an append-only SHA-256 hash chain linked back to Genesis. Any database alteration is instantly detected and alerts security engineers.</p>
-                </div>
-                <div class="card">
-                    <h3>☁️ AWS Well-Architected</h3>
-                    <p>Deployed across Custom VPC, Amazon RDS MySQL in private subnets, EC2 with Gunicorn & systemd, Parameter Store KMS encryption, and S3 audit vaults.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 2. Voter Registration Page -->
-        <section id="register" class="section">
-            <div class="form-container">
-                <div class="form-title">Voter Registration</div>
-                <div class="form-subtitle">Register to become an authorized voter in CryptoVote.</div>
-                <div id="reg-alert" class="alert"></div>
-                <form onsubmit="handleRegister(event)">
-                    <div class="form-group">
-                        <label for="reg-voter-id">Voter ID / Student ID</label>
-                        <input type="text" id="reg-voter-id" placeholder="e.g. voter_alice" required autocomplete="username">
-                    </div>
-                    <div class="form-group">
-                        <label for="reg-password">Password</label>
-                        <input type="password" id="reg-password" placeholder="At least 6 characters" required autocomplete="new-password">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Create Voter Account</button>
-                </form>
-                <p style="margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-muted); text-align: center;">
-                    Already registered? <a onclick="showSection('login')" style="color: var(--secondary); cursor: pointer; text-decoration: underline;">Log in here</a>
-                </p>
-            </div>
-        </section>
-
-        <!-- 3. Voter Login Page -->
-        <section id="login" class="section">
-            <div class="form-container">
-                <div class="form-title">Voter Login</div>
-                <div class="form-subtitle">Authenticate securely using PBKDF2-HMAC-SHA256 password verification.</div>
-                <div id="login-alert" class="alert"></div>
-                <form onsubmit="handleLogin(event)">
-                    <div class="form-group">
-                        <label for="login-voter-id">Voter ID</label>
-                        <input type="text" id="login-voter-id" placeholder="Enter your Voter ID" required autocomplete="username">
-                    </div>
-                    <div class="form-group">
-                        <label for="login-password">Password</label>
-                        <input type="password" id="login-password" placeholder="Enter your password" required autocomplete="current-password">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Authenticate & Continue</button>
-                </form>
-                <p style="margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-muted); text-align: center;">
-                    Need an account? <a onclick="showSection('register')" style="color: var(--secondary); cursor: pointer; text-decoration: underline;">Register here</a>
-                </p>
-            </div>
-        </section>
-
-        <!-- 4. Candidates Page -->
-        <section id="candidates" class="section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                <div>
-                    <h2>Official Election Candidates</h2>
-                    <p style="color: var(--text-muted);">Approved candidates standing for the 2026 CryptoVote election.</p>
-                </div>
-                <button onclick="loadCandidates()" class="btn btn-secondary">🔄 Refresh</button>
-            </div>
-            <div id="candidates-list" class="card-grid">
-                <!-- Dynamically populated -->
-            </div>
-        </section>
-
-        <!-- 5. Anonymous Voting Interface -->
-        <section id="voting" class="section">
-            <div class="form-container" style="max-width: 600px;">
-                <div class="form-title">Cast Your Anonymous Ballot</div>
-                <div class="form-subtitle">Your vote will be blinded locally before submission to guarantee zero correlation with your identity.</div>
-                <div id="vote-alert" class="alert"></div>
-                <form onsubmit="executeAnonymousVote(event)">
-                    <div class="form-group">
-                        <label>Select Your Candidate:</label>
-                        <div id="vote-candidate-options">
-                            <!-- Injected dynamically -->
+                <div class="hero-grid">
+                    <div>
+                        <div class="hero-title">
+                            CYBER<br>
+                            <span class="purple-text">VOTING</span>
+                        </div>
+                        <div class="hero-subtitle">
+                            FUNCTIONAL. CRYPTOGRAPHIC. UNAPOLOGETIC.
+                        </div>
+                        <p class="hero-paragraph">
+                            CryptoVote is the intersection of modern cryptography and AWS cloud infrastructure. 
+                            David Chaum Blind RSA signatures, append-only SHA-256 blockchain ledgers, and zero-knowledge 
+                            anonymity engineered for the digital age.
+                        </p>
+                        <div class="hero-actions">
+                            <button onclick="showSection('voting')" class="btn btn-black">
+                                Cast Ballot ↗
+                            </button>
+                            <button onclick="showSection('candidates')" class="btn btn-white">
+                                View Candidates ⛶
+                            </button>
+                            <button onclick="showSection('results')" class="btn btn-white">
+                                Live Tally ↗
+                            </button>
                         </div>
                     </div>
-                    <div style="background: rgba(6, 182, 212, 0.08); border: 1px solid rgba(6, 182, 212, 0.2); border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem; font-size: 0.85rem; color: #cbd5e1;">
-                        🔒 <strong>Zero-Knowledge Assurance:</strong> The client generates a random blinding factor $r$. Flask signs $(m \cdot r^e \pmod N)$ without knowing your choice, which is then unblinded locally before anonymous submission.
+
+                    <!-- Right Tech Visual (Matching image wireframe & yellow badge) -->
+                    <div class="tech-spec-container">
+                        <div class="tech-spec-header">
+                            <span>> ENCRYPTION_ENGINE</span>
+                            <span class="status-tag">ACTIVE 83%</span>
+                        </div>
+                        <div class="wireframe-cube-visual">
+                            <div class="pixel-art">⬡</div>
+                            <div class="coordinate-badge">
+                                REGION: ap-south-1<br>
+                                LAT_19.0760 LON_72.8777<br>
+                                NODE: EC2_GUNICORN_80
+                            </div>
+                        </div>
+                        <div class="tech-spec-footer">
+                            <span>//LEDGER_CHAIN_01</span>
+                            <span>BLOCKS: ON-CHAIN</span>
+                        </div>
                     </div>
-                    <button type="submit" id="btn-submit-vote" class="btn btn-primary">Submit Cryptographic Ballot</button>
+                </div>
+            </div>
+
+            <!-- ==============================================================
+                 SECTION /02: CORE PRINCIPLES (MATCHING SECTION /02 IN IMAGE)
+                 ============================================================== -->
+            <div class="principles-header">
+                <span>/02 CORE PRINCIPLES</span>
+                <span>+ + + + +</span>
+            </div>
+
+            <div class="principles-grid">
+                <div class="principle-card">
+                    <div class="principle-icon">◇</div>
+                    <div class="principle-title">Function Over Form</div>
+                    <p class="principle-text">Design is built to secure votes. Strict cryptographic boundaries. Nothing more.</p>
+                </div>
+                <div class="principle-card">
+                    <div class="principle-icon">▦</div>
+                    <div class="principle-title">Blind RSA Privacy</div>
+                    <p class="principle-text">David Chaum scheme. Authority signs without ever knowing which candidate was chosen.</p>
+                </div>
+                <div class="principle-card">
+                    <div class="principle-icon">⛓</div>
+                    <div class="principle-title">SHA-256 Hash Chain</div>
+                    <p class="principle-text">Immutable blocks. Every vote cryptographically bound to Genesis. Tamper detection built-in.</p>
+                </div>
+                <div class="principle-card">
+                    <div class="principle-icon">⚡</div>
+                    <div class="principle-title">Atomic Prevention</div>
+                    <p class="principle-text">Ballot token hashes enforced via MySQL UNIQUE constraints. Replays blocked with HTTP 409.</p>
+                </div>
+                <div class="principle-card">
+                    <div class="principle-icon">☁</div>
+                    <div class="principle-title">AWS Well-Architected</div>
+                    <p class="principle-text">VPC private RDS subnets, Lambda event closure, S3 audit vaults, and CloudWatch alerts.</p>
+                </div>
+            </div>
+
+            <!-- ==============================================================
+                 SECTION /05: SYSTEM STATUS (MATCHING /05 IN IMAGE)
+                 ============================================================== -->
+            <div class="status-dashboard-grid">
+                <!-- Status Panel Left -->
+                <div class="cyber-panel">
+                    <div>
+                        <div class="cyber-panel-tag">/04 ENROLLMENT</div>
+                        <div class="cyber-panel-title">Voter Access</div>
+                        <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.25rem;">
+                            Voters authenticate with 100,000 iterations of PBKDF2-HMAC-SHA256 and unique 16-byte random salts.
+                        </p>
+                    </div>
+                    <button onclick="showSection('register')" class="btn btn-black" style="width: 100%;">
+                        Register Voter ↗
+                    </button>
+                </div>
+
+                <!-- Status Panel Center (Exact /05 SYSTEM STATUS widget from image) -->
+                <div class="cyber-panel">
+                    <div>
+                        <div class="cyber-panel-tag">/05 TELEMETRY</div>
+                        <div class="cyber-panel-title">System Status</div>
+                        
+                        <div class="stat-row">
+                            <span class="stat-label">CPU_USAGE</span>
+                            <div class="stat-bar-outer"><div class="stat-bar-fill" style="width: 18%;"></div></div>
+                            <span class="stat-val">18%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">MEMORY</span>
+                            <div class="stat-bar-outer"><div class="stat-bar-fill" style="width: 42%;"></div></div>
+                            <span class="stat-val">420 MB</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">RDS_MYSQL</span>
+                            <div class="stat-bar-outer"><div class="stat-bar-fill" style="width: 100%; background: var(--purple-main);"></div></div>
+                            <span class="stat-val" style="color: var(--purple-main);">ONLINE</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">HASH_CHAIN</span>
+                            <div class="stat-bar-outer"><div class="stat-bar-fill" style="width: 100%; background: var(--purple-main);"></div></div>
+                            <span class="stat-val" style="color: var(--purple-main);">INTACT</span>
+                        </div>
+                    </div>
+
+                    <div class="neon-operational-badge">
+                        <span>ALL SYSTEMS OPERATIONAL</span>
+                        <span class="status-dot"></span>
+                    </div>
+                </div>
+
+                <!-- Status Panel Right -->
+                <div class="cyber-panel">
+                    <div>
+                        <div class="cyber-panel-tag">/06 VERIFICATION</div>
+                        <div class="cyber-panel-title">Audit Ledger</div>
+                        <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.25rem;">
+                            Verify receipts or recalculate the complete SHA-256 ledger from Genesis. Tampering triggers Amazon SNS alerts.
+                        </p>
+                    </div>
+                    <button onclick="showSection('receipt')" class="btn btn-purple" style="width: 100%;">
+                        Verify Receipt ↗
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ==================================================================
+             SECTION /02: CANDIDATES ROSTER (MATCHING /03 IN IMAGE)
+             ================================================================== -->
+        <section id="candidates" class="section">
+            <div class="principles-header">
+                <span>/03 OFFICIAL CANDIDATE ROSTER</span>
+                <button onclick="loadCandidates()" class="btn btn-white btn-sm">Refresh List 🔄</button>
+            </div>
+            <div class="section-desc">Approved candidates standing for election in the 2026 CryptoVote general election.</div>
+            
+            <div id="candidates-list" class="cards-grid">
+                <!-- Dynamically injected via JavaScript -->
+            </div>
+        </section>
+
+        <!-- ==================================================================
+             SECTION /03: ANONYMOUS VOTING CONSOLE
+             ================================================================== -->
+        <section id="voting" class="section">
+            <div class="form-brutalist-card">
+                <div class="form-header">
+                    <span class="section-tag">/04 BALLOT SUBMISSION CONSOLE</span>
+                    <h2 class="section-title">Cast Anonymous Ballot</h2>
+                    <div style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-muted);">
+                        Zero-Knowledge Guarantee: Your vote is blinded locally before reaching the election authority.
+                    </div>
+                </div>
+
+                <div id="vote-alert" class="alert"></div>
+
+                <form onsubmit="executeAnonymousVote(event)">
+                    <div class="form-group">
+                        <label>Select Official Candidate:</label>
+                        <div id="vote-candidate-options">
+                            <!-- Populated dynamically via loadCandidates -->
+                        </div>
+                    </div>
+
+                    <!-- Cryptographic Protocol Visual Indicator -->
+                    <div class="code-box">
+                        <span class="highlight">// DAVID CHAUM PROTOCOL EXECUTION</span><br>
+                        1. Client blinds ballot: m' = (m * r^e) mod N<br>
+                        2. Authority signs blinded: s' = (m')^d mod N (choice hidden)<br>
+                        3. Client unblinds: s = (s' * r^-1) mod N<br>
+                        4. Anonymous submission: s^e mod N == m
+                    </div>
+
+                    <button type="submit" id="btn-submit-vote" class="btn btn-purple" style="width: 100%;">
+                        Submit Cryptographic Ballot ↗
+                    </button>
                 </form>
             </div>
         </section>
 
-        <!-- 6. Receipt Verification Page -->
+        <!-- ==================================================================
+             SECTION /04: RECEIPT LOOKUP
+             ================================================================== -->
         <section id="receipt" class="section">
-            <div class="form-container" style="max-width: 650px;">
-                <div class="form-title">Cryptographic Receipt Lookup</div>
-                <div class="form-subtitle">Verify that your anonymous ballot is permanently anchored in the SHA-256 blockchain ledger.</div>
+            <div class="form-brutalist-card">
+                <div class="form-header">
+                    <span class="section-tag">/05 ON-CHAIN VERIFICATION</span>
+                    <h2 class="section-title">Receipt Audit</h2>
+                    <div style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-muted);">
+                        Confirm that your anonymous ballot is immutably anchored in the SHA-256 blockchain ledger.
+                    </div>
+                </div>
+
                 <form onsubmit="handleReceiptLookup(event)">
                     <div class="form-group">
-                        <label for="receipt-hash-input">Entry Receipt Hash (SHA-256)</label>
-                        <input type="text" id="receipt-hash-input" placeholder="Paste 64-character hex receipt hash" required>
+                        <label for="receipt-hash-input">SHA-256 Receipt Hash</label>
+                        <input type="text" id="receipt-hash-input" class="form-control" placeholder="Paste 64-character hex receipt hash" required>
                     </div>
-                    <button type="submit" class="btn btn-primary">Verify Receipt On-Chain</button>
+                    <button type="submit" class="btn btn-black" style="width: 100%;">
+                        Verify On-Chain ↗
+                    </button>
                 </form>
+
                 <div id="receipt-result" style="margin-top: 1.5rem; display: none;"></div>
             </div>
         </section>
 
-        <!-- 7. Election Results Page -->
+        <!-- ==================================================================
+             SECTION /05: LIVE ELECTION RESULTS
+             ================================================================== -->
         <section id="results" class="section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                <div>
-                    <h2>Live Election Results</h2>
-                    <p style="color: var(--text-muted);"><span id="results-total-votes">0 Total Votes Cast</span></p>
-                </div>
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span id="results-status-badge" class="badge badge-open">Election OPEN</span>
-                    <button onclick="loadResults()" class="btn btn-secondary">🔄 Refresh</button>
+            <div class="principles-header">
+                <span>/06 LIVE ELECTION RESULTS</span>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <span id="results-status-badge" class="btn btn-lime btn-sm" style="pointer-events: none;">ELECTION OPEN</span>
+                    <button onclick="loadResults()" class="btn btn-white btn-sm">Refresh Tally 🔄</button>
                 </div>
             </div>
-            <div class="card" style="max-width: 750px; margin: 0 auto;">
+            
+            <div class="form-brutalist-card" style="max-width: 800px; margin: 1.5rem auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <div style="font-size: 1.4rem; font-weight: 900; text-transform: uppercase;">Official Vote Count</div>
+                        <div id="results-total-votes" style="font-family: var(--font-mono); color: var(--purple-main); font-weight: 800;">
+                            0 Total Votes Cast
+                        </div>
+                    </div>
+                    <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);">
+                        STORAGE: AMAZON RDS MYSQL 8.0
+                    </div>
+                </div>
+
                 <div id="results-bars">
-                    <!-- Populated dynamically -->
+                    <!-- Populated dynamically via loadResults -->
                 </div>
             </div>
         </section>
 
-        <!-- 8. Administrator Control Center -->
+        <!-- ==================================================================
+             SECTION /06: ADMIN CONSOLE
+             ================================================================== -->
         <section id="admin" class="section">
-            <div style="max-width: 800px; margin: 0 auto;">
-                <div style="margin-bottom: 1.5rem;">
-                    <h2>Election Administration & Chain Auditing</h2>
-                    <p style="color: var(--text-muted);">Verify cryptographic hash-chain integrity or close the election and archive tallies to S3.</p>
-                </div>
-                <div id="admin-alert" class="alert"></div>
+            <div class="principles-header">
+                <span>/07 ELECTION ADMINISTRATION & AUDIT</span>
+                <span>ACCESS_RESTRICTED // ROOT</span>
+            </div>
 
-                <div class="card-grid" style="margin-bottom: 2rem;">
-                    <!-- Verify Hash Chain -->
-                    <div class="card">
-                        <h3>🔍 Hash-Chain Ledger Audit</h3>
-                        <p>Recalculates every block hash from the Genesis block. Detects unauthorized SQL modifications and triggers automated Amazon SNS alerts.</p>
-                        <button onclick="adminVerifyChain()" class="btn btn-secondary" style="width: 100%;">
-                            Audit Hash Chain Integrity
-                        </button>
+            <div id="admin-alert" class="alert"></div>
+
+            <div class="cards-grid" style="grid-template-columns: 1fr 1fr;">
+                <!-- Audit Hash Chain -->
+                <div class="cyber-panel">
+                    <div>
+                        <div class="cyber-panel-tag">> INTEGRITY_AUDIT</div>
+                        <div class="cyber-panel-title">Audit Hash Chain</div>
+                        <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.5rem;">
+                            Recalculates every block hash from the Genesis block ($0^{64}$). Detects unauthorized SQL modifications and triggers automated Amazon SNS email alerts.
+                        </p>
                     </div>
+                    <button onclick="adminVerifyChain()" class="btn btn-black" style="width: 100%;">
+                        Run Cryptographic Audit ↗
+                    </button>
+                </div>
 
-                    <!-- Close Election -->
-                    <div class="card">
-                        <h3>🔒 Close Election (Lambda / SSM)</h3>
-                        <p>Locks voting endpoints, performs final chain verification, and exports results.json and chain.json to Amazon S3 audit bucket.</p>
-                        <div class="form-group" style="margin-bottom: 0.75rem;">
-                            <input type="password" id="admin-secret-input" placeholder="Enter Admin Secret Key" autocomplete="off">
+                <!-- Close Election -->
+                <div class="cyber-panel">
+                    <div>
+                        <div class="cyber-panel-tag">> SERVERLESS_LAMBDA</div>
+                        <div class="cyber-panel-title">Close Election</div>
+                        <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1rem;">
+                            Locks voting endpoints, executes final verification, and exports results.json and chain.json to Amazon S3 audit bucket.
+                        </p>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <input type="password" id="admin-secret-input" class="form-control" placeholder="Enter Admin Secret Key" autocomplete="off">
                         </div>
-                        <button onclick="adminCloseElection()" class="btn btn-danger" style="width: 100%;">
-                            Close Election & Archive to S3
-                        </button>
+                    </div>
+                    <button onclick="adminCloseElection()" class="btn btn-danger" style="width: 100%;">
+                        Close Election & Archive to S3 🔒
+                    </button>
+                </div>
+            </div>
+
+            <div id="admin-chain-output" style="margin-top: 1.5rem; display: none;"></div>
+        </section>
+
+        <!-- ==================================================================
+             SECTION: VOTER REGISTRATION
+             ================================================================== -->
+        <section id="register" class="section">
+            <div class="form-brutalist-card">
+                <div class="form-header">
+                    <span class="section-tag">/08 VOTER REGISTRATION</span>
+                    <h2 class="section-title">Register Voter</h2>
+                    <div style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-muted);">
+                        Create an authorized voter identity. Salted PBKDF2 hashing protects credentials.
                     </div>
                 </div>
 
-                <div id="admin-chain-output" style="display: none;"></div>
+                <div id="reg-alert" class="alert"></div>
+
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label for="reg-voter-id">Voter ID / Student ID</label>
+                        <input type="text" id="reg-voter-id" class="form-control" placeholder="e.g. voter_alice" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-password">Password</label>
+                        <input type="password" id="reg-password" class="form-control" placeholder="At least 6 characters" required autocomplete="new-password">
+                    </div>
+                    <button type="submit" class="btn btn-purple" style="width: 100%;">
+                        Enroll Voter Identity ↗
+                    </button>
+                </form>
+                <div style="margin-top: 1.25rem; font-family: var(--font-mono); font-size: 0.8rem; text-align: center;">
+                    Already registered? <a onclick="showSection('login')" style="color: var(--purple-main); cursor: pointer; text-decoration: underline; font-weight: 800;">Log in here</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================================================================
+             SECTION: VOTER LOGIN
+             ================================================================== -->
+        <section id="login" class="section">
+            <div class="form-brutalist-card">
+                <div class="form-header">
+                    <span class="section-tag">/09 AUTHENTICATION</span>
+                    <h2 class="section-title">Voter Login</h2>
+                    <div style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-muted);">
+                        Authenticate using constant-time PBKDF2 password evaluation.
+                    </div>
+                </div>
+
+                <div id="login-alert" class="alert"></div>
+
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="login-voter-id">Voter ID</label>
+                        <input type="text" id="login-voter-id" class="form-control" placeholder="Enter your Voter ID" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn btn-black" style="width: 100%;">
+                        Authenticate & Obtain Token ↗
+                    </button>
+                </form>
+                <div style="margin-top: 1.25rem; font-family: var(--font-mono); font-size: 0.8rem; text-align: center;">
+                    Need an account? <a onclick="showSection('register')" style="color: var(--purple-main); cursor: pointer; text-decoration: underline; font-weight: 800;">Register here</a>
+                </div>
             </div>
         </section>
 
     </main>
 
+    <!-- Bottom System Status Bar (Matching reference image purple footer) -->
+    <div class="bottom-system-bar">
+        <div>
+            <span>• CONNECTION SECURE</span>
+            <span style="margin: 0 0.85rem; opacity: 0.6;">/</span>
+            <span>> ACCESS GRANTED_</span>
+        </div>
+        <div>
+            <span class="live-badge">NODE: AP_SOUTH_1_EC2</span>
+            <span style="margin-left: 0.75rem;">SCN: 08824 +</span>
+        </div>
+    </div>
+
+    <!-- Footer -->
     <footer>
-        <p>CryptoVote – Secure Online Voting System | Cloud Computing Laboratory Mini Project 2026</p>
-        <p style="margin-top: 0.25rem; font-size: 0.75rem; color: #64748b;">Powered by David Chaum RSA Blind Signatures & Amazon Web Services</p>
+        <div class="footer-container">
+            <div>
+                <strong>CRYPTOVOTE_</strong> © 2026 CLOUD COMPUTING LABORATORY MINI PROJECT.
+            </div>
+            <div>
+                AWS AP-SOUTH-1 // GUNICORN WSGI // RSA-2048 BLIND SIGNATURES // SHA-256 LEDGER
+            </div>
+        </div>
     </footer>
 
     <script src="/static/js/app.js"></script>
 </body>
 </html>
-

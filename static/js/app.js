@@ -1,6 +1,6 @@
 /**
  * CryptoVote Frontend Logic & Client-Side Cryptography
- * Implements David Chaum Blind RSA Signatures natively in modern JavaScript with BigInt.
+ * Cyber Brutalism Implementation with native BigInt David Chaum Blind Signatures.
  */
 
 // Application State
@@ -14,7 +14,25 @@ const state = {
 };
 
 // ============================================================================
-// 1. BIGINT CRYPTOGRAPHIC UTILITIES (DAVID CHAUM RSA BLIND SIGNATURES)
+// 1. LIVE SYSTEM TIME CLOCK
+// ============================================================================
+
+function startSystemClock() {
+    const timeEl = document.getElementById('live-sys-time');
+    if (!timeEl) return;
+    function update() {
+        const now = new Date();
+        const hours = String(now.getUTCHours()).padStart(2, '0');
+        const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+        const seconds = String(now.getUTCSeconds()).padStart(2, '0');
+        timeEl.textContent = `${hours}:${minutes}:${seconds}`;
+    }
+    update();
+    setInterval(update, 1000);
+}
+
+// ============================================================================
+// 2. BIGINT CRYPTOGRAPHIC UTILITIES (DAVID CHAUM RSA BLIND SIGNATURES)
 // ============================================================================
 
 function modPow(base, exp, mod) {
@@ -59,7 +77,7 @@ function getRandomBigInt(bytes = 32) {
 }
 
 // ============================================================================
-// 2. UI NAVIGATION & NOTIFICATION HELPERS
+// 3. UI NAVIGATION & NOTIFICATION HELPERS
 // ============================================================================
 
 function showSection(sectionId) {
@@ -74,13 +92,15 @@ function showSection(sectionId) {
 
     if (sectionId === 'candidates' || sectionId === 'voting') loadCandidates();
     if (sectionId === 'results') loadResults();
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function showAlert(elementId, message, type = 'danger') {
     const alertBox = document.getElementById(elementId);
     if (!alertBox) return;
     alertBox.className = `alert alert-${type}`;
-    alertBox.textContent = message;
+    alertBox.innerHTML = `<strong>[ ${type.toUpperCase()} ]</strong> ${message}`;
     alertBox.style.display = 'block';
     setTimeout(() => {
         alertBox.style.display = 'none';
@@ -89,14 +109,16 @@ function showAlert(elementId, message, type = 'danger') {
 
 function updateSessionUI() {
     const sessionDiv = document.getElementById('user-session');
+    if (!sessionDiv) return;
+
     if (state.voterId && state.sessionToken) {
         sessionDiv.innerHTML = `
-            <span>👤 <strong>${state.voterId}</strong></span>
-            <button onclick="logout()" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">Logout</button>
+            <span style="font-family: var(--font-mono); font-size: 0.78rem; font-weight: 800; color: var(--purple-main);">VOTER: ${state.voterId}</span>
+            <button onclick="logout()" class="btn btn-black btn-sm">LOGOUT</button>
         `;
     } else {
         sessionDiv.innerHTML = `
-            <a onclick="showSection('login')" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Login</a>
+            <button onclick="showSection('login')" class="btn btn-black btn-sm">AUTHENTICATE ↗</button>
         `;
     }
 }
@@ -113,7 +135,7 @@ function logout() {
 }
 
 // ============================================================================
-// 3. API CLIENT CALLS
+// 4. API CLIENT CALLS
 // ============================================================================
 
 async function fetchAuthorityPublicKey() {
@@ -146,13 +168,13 @@ async function handleRegister(e) {
         const data = await res.json();
 
         if (res.ok) {
-            showAlert('reg-alert', `Registration successful! Voter ID: ${voterId}. Please log in.`, 'success');
-            setTimeout(() => showSection('login'), 1500);
+            showAlert('reg-alert', `Voter account enrolled: ${voterId}. Please authenticate now.`, 'success');
+            setTimeout(() => showSection('login'), 1200);
         } else {
             showAlert('reg-alert', data.error || 'Registration failed');
         }
     } catch (err) {
-        showAlert('reg-alert', 'Network error connecting to server');
+        showAlert('reg-alert', 'Network error connecting to API server');
     }
 }
 
@@ -179,13 +201,13 @@ async function handleLogin(e) {
             localStorage.setItem('has_ballot', data.has_requested_ballot);
 
             updateSessionUI();
-            showAlert('login-alert', 'Login successful! Redirecting to ballot...', 'success');
+            showAlert('login-alert', 'Authentication verified via PBKDF2! Redirecting to ballot console...', 'success');
             setTimeout(() => showSection('voting'), 1000);
         } else {
             showAlert('login-alert', data.error || 'Invalid credentials');
         }
     } catch (err) {
-        showAlert('login-alert', 'Network error connecting to server');
+        showAlert('login-alert', 'Network error connecting to API server');
     }
 }
 
@@ -199,18 +221,21 @@ async function loadCandidates() {
         const listDiv = document.getElementById('candidates-list');
         if (listDiv) {
             listDiv.innerHTML = state.candidates.map(c => `
-                <div class="card candidate-card">
-                    <div class="candidate-header">
+                <div class="candidate-brutalist-card">
+                    <div class="candidate-media-box">
+                        <span class="candidate-num-tag">[ CANDIDATE 0${c.id} ]</span>
+                        <div class="candidate-avatar">🏛️</div>
+                    </div>
+                    <div class="candidate-info-box">
                         <div>
                             <div class="candidate-name">${c.name}</div>
-                            <div class="candidate-party">🏛️ ${c.party}</div>
+                            <div class="candidate-party">PARTY // ${c.party}</div>
+                            <p class="candidate-bio">${c.bio || 'Official vetted candidate standing for the 2026 CryptoVote general election.'}</p>
                         </div>
-                        <span class="badge badge-open">Candidate #${c.id}</span>
+                        <button onclick="selectAndVote(${c.id})" class="btn btn-purple" style="width: 100%;">
+                            Vote for ${c.name} ↗
+                        </button>
                     </div>
-                    <p>Official candidate standing in the 2026 CryptoVote general election.</p>
-                    <button onclick="selectAndVote(${c.id})" class="btn btn-primary" style="margin-top: 1rem;">
-                        Vote for ${c.name}
-                    </button>
                 </div>
             `).join('');
         }
@@ -219,10 +244,10 @@ async function loadCandidates() {
         const voteOptions = document.getElementById('vote-candidate-options');
         if (voteOptions) {
             voteOptions.innerHTML = state.candidates.map(c => `
-                <div style="background: #0f172a; padding: 1rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 1rem; cursor: pointer;">
-                    <input type="radio" name="candidate_choice" id="cand-${c.id}" value="${c.id}" style="width: 1.25rem; height: 1.25rem; accent-color: var(--primary);">
-                    <label for="cand-${c.id}" style="margin: 0; cursor: pointer; flex: 1;">
-                        <strong>${c.name}</strong> <span style="color: var(--secondary); margin-left: 0.5rem;">(${c.party})</span>
+                <div class="candidate-radio-item" onclick="document.getElementById('cand-${c.id}').checked = true">
+                    <input type="radio" name="candidate_choice" id="cand-${c.id}" value="${c.id}">
+                    <label for="cand-${c.id}">
+                        ${c.name} <span style="font-family: var(--font-mono); font-size: 0.82rem; color: var(--purple-main); font-weight: 800;">[ ${c.party} ]</span>
                     </label>
                 </div>
             `).join('');
@@ -239,7 +264,7 @@ function selectAndVote(candidateId) {
 }
 
 // ============================================================================
-// 4. CLIENT-SIDE DAVID CHAUM BLIND VOTING PIPELINE
+// 5. CLIENT-SIDE DAVID CHAUM BLIND VOTING PIPELINE
 // ============================================================================
 
 async function executeAnonymousVote(e) {
@@ -247,21 +272,21 @@ async function executeAnonymousVote(e) {
     const alertId = 'vote-alert';
 
     if (!state.sessionToken) {
-        showAlert(alertId, 'You must be logged in to cast a vote!');
+        showAlert(alertId, 'Authentication required! Please log in to request a ballot.');
         setTimeout(() => showSection('login'), 1200);
         return;
     }
 
     const selectedRadio = document.querySelector('input[name="candidate_choice"]:checked');
     if (!selectedRadio) {
-        showAlert(alertId, 'Please select a candidate first!');
+        showAlert(alertId, 'Please select a candidate before submitting!');
         return;
     }
 
     const candidateId = parseInt(selectedRadio.value);
     const voteBtn = document.getElementById('btn-submit-vote');
     voteBtn.disabled = true;
-    voteBtn.textContent = '🔒 Blinding ballot & generating cryptographic proof...';
+    voteBtn.textContent = '🔒 BLINDING BALLOT & GENERATING PROOF...';
 
     try {
         // Step 1: Fetch Authority RSA Public Key
@@ -285,7 +310,7 @@ async function executeAnonymousVote(e) {
         const m_prime = (m * r_pow_e) % pubKey.n;
 
         // Step 3: Call POST /blind-sign with m' (Identity Known, Ballot Choice HIDDEN)
-        voteBtn.textContent = '✍️ Requesting blind signature from election authority...';
+        voteBtn.textContent = '✍️ REQUESTING BLIND SIGNATURE FROM AUTHORITY...';
         const signRes = await fetch('/blind-sign', {
             method: 'POST',
             headers: {
@@ -303,7 +328,7 @@ async function executeAnonymousVote(e) {
         const s_prime = BigInt(signData.blind_signature);
 
         // Step 4: Unblind signature locally: s = (s' * r^-1) mod N
-        voteBtn.textContent = '🔓 Unblinding signature & submitting anonymous ballot...';
+        voteBtn.textContent = '🔓 UNBLINDING SIGNATURE & CASTING ANONYMOUSLY...';
         const r_inv = modInverse(r, pubKey.n);
         const s = (s_prime * r_inv) % pubKey.n;
 
@@ -329,9 +354,9 @@ async function executeAnonymousVote(e) {
         localStorage.setItem('has_ballot', 'true');
         state.hasRequestedBallot = true;
 
-        showAlert(alertId, `Vote successfully cast and anchored in block #${voteData.block_index}!`, 'success');
+        showAlert(alertId, `Vote successfully anchored in ledger block #${voteData.block_index}!`, 'success');
         
-        // Show receipt in receipt section
+        // Populate receipt section
         document.getElementById('receipt-hash-input').value = voteData.receipt_hash;
         setTimeout(() => {
             showSection('receipt');
@@ -342,12 +367,12 @@ async function executeAnonymousVote(e) {
         showAlert(alertId, err.message);
     } finally {
         voteBtn.disabled = false;
-        voteBtn.textContent = 'Submit Cryptographic Ballot';
+        voteBtn.textContent = 'Submit Cryptographic Ballot ↗';
     }
 }
 
 // ============================================================================
-// 5. RECEIPT LOOKUP & VERIFICATION
+// 6. RECEIPT LOOKUP & VERIFICATION
 // ============================================================================
 
 async function handleReceiptLookup(e) {
@@ -360,7 +385,7 @@ async function handleReceiptLookup(e) {
 async function lookupReceipt(hash) {
     const resultDiv = document.getElementById('receipt-result');
     resultDiv.style.display = 'block';
-    resultDiv.innerHTML = '<p>Searching cryptographic ledger...</p>';
+    resultDiv.innerHTML = '<p style="font-family: var(--font-mono); font-weight: 700;">Querying SHA-256 blockchain ledger...</p>';
 
     try {
         const res = await fetch(`/receipt/${hash}`);
@@ -368,34 +393,34 @@ async function lookupReceipt(hash) {
 
         if (res.ok && data.verified) {
             resultDiv.innerHTML = `
-                <div class="card" style="border-color: var(--success); background: rgba(16, 185, 129, 0.05);">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
-                        <span class="badge badge-open">VERIFIED ON-CHAIN</span>
-                        <strong style="color: var(--success);">Ledger Block #${data.block_index}</strong>
+                <div class="cyber-panel" style="border-color: var(--success); background: #ffffff;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                        <span class="btn btn-lime btn-sm" style="pointer-events: none;">VERIFIED ON-CHAIN</span>
+                        <span style="font-family: var(--font-mono); font-weight: 800; color: var(--purple-main);">BLOCK #${data.block_index}</span>
                     </div>
-                    <p><strong>Candidate ID:</strong> Candidate #${data.candidate_id}</p>
-                    <p><strong>Timestamp:</strong> ${data.timestamp}</p>
-                    <p style="margin-bottom: 0.25rem;"><strong>Receipt Hash:</strong></p>
+                    <p style="font-family: var(--font-mono); font-size: 0.88rem;"><strong>CANDIDATE ID:</strong> Candidate #${data.candidate_id}</p>
+                    <p style="font-family: var(--font-mono); font-size: 0.88rem;"><strong>UTC TIMESTAMP:</strong> ${data.timestamp}</p>
+                    <p style="font-family: var(--font-mono); font-size: 0.8rem; margin-top: 0.5rem; color: var(--text-muted);"><strong>ENTRY RECEIPT HASH (SHA-256):</strong></p>
                     <div class="code-box">${data.receipt_hash}</div>
-                    <p style="margin-bottom: 0.25rem;"><strong>Previous Block Hash:</strong></p>
+                    <p style="font-family: var(--font-mono); font-size: 0.8rem; margin-top: 0.5rem; color: var(--text-muted);"><strong>PREVIOUS BLOCK HASH:</strong></p>
                     <div class="code-box">${data.previous_hash}</div>
                 </div>
             `;
         } else {
             resultDiv.innerHTML = `
-                <div class="card" style="border-color: var(--danger); background: rgba(239, 68, 68, 0.05);">
-                    <strong style="color: var(--danger);">Receipt Not Found</strong>
-                    <p style="margin-top: 0.5rem; color: var(--text-muted);">The hash provided does not exist in the blockchain hash-chain ledger.</p>
+                <div class="cyber-panel" style="border-color: var(--danger); background: var(--danger-light);">
+                    <div style="font-family: var(--font-mono); font-weight: 800; color: var(--danger);">[ 404 NOT FOUND ] RECEIPT UNVERIFIED</div>
+                    <p style="margin-top: 0.5rem; font-family: var(--font-mono); font-size: 0.85rem; color: #7f1d1d;">The receipt hash provided does not match any block in the SHA-256 blockchain ledger.</p>
                 </div>
             `;
         }
     } catch (err) {
-        resultDiv.innerHTML = `<p style="color: var(--danger);">Error querying receipt: ${err.message}</p>`;
+        resultDiv.innerHTML = `<p style="color: var(--danger); font-family: var(--font-mono);">Error querying receipt: ${err.message}</p>`;
     }
 }
 
 // ============================================================================
-// 6. LIVE RESULTS & ELECTION STATUS
+// 7. LIVE RESULTS & ELECTION STATUS
 // ============================================================================
 
 async function loadResults() {
@@ -405,8 +430,8 @@ async function loadResults() {
 
         const badge = document.getElementById('results-status-badge');
         if (badge) {
-            badge.className = `badge ${data.election_status === 'OPEN' ? 'badge-open' : 'badge-closed'}`;
-            badge.textContent = `Election ${data.election_status}`;
+            badge.className = `btn btn-sm ${data.election_status === 'OPEN' ? 'btn-lime' : 'btn-danger'}`;
+            badge.textContent = `ELECTION ${data.election_status}`;
         }
 
         document.getElementById('results-total-votes').textContent = `${data.total_votes} Total Votes Cast`;
@@ -417,13 +442,13 @@ async function loadResults() {
         container.innerHTML = data.results.map(c => {
             const pct = total > 0 ? ((c.votes / total) * 100).toFixed(1) : 0;
             return `
-                <div class="result-item">
-                    <div class="result-meta">
-                        <span>${c.name} <span style="color: var(--secondary);">(${c.party})</span></span>
-                        <span>${c.votes} votes (${pct}%)</span>
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-weight: 800; font-size: 0.88rem; margin-bottom: 0.4rem;">
+                        <span>${c.name} <span style="color: var(--purple-main);">[ ${c.party} ]</span></span>
+                        <span>${c.votes} VOTES (${pct}%)</span>
                     </div>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" style="width: ${pct}%;"></div>
+                    <div style="height: 16px; background: #e2e1ec; border: 2px solid var(--border-color); position: relative;">
+                        <div style="height: 100%; width: ${pct}%; background: var(--purple-main); transition: width 0.6s ease;"></div>
                     </div>
                 </div>
             `;
@@ -434,13 +459,13 @@ async function loadResults() {
 }
 
 // ============================================================================
-// 7. ADMIN CONTROLS: CHAIN VERIFICATION & CLOSURE
+// 8. ADMIN CONTROLS: CHAIN AUDIT & CLOSURE
 // ============================================================================
 
 async function adminVerifyChain() {
     const out = document.getElementById('admin-chain-output');
     out.style.display = 'block';
-    out.innerHTML = '<p>Recalculating SHA-256 hashes from Genesis block...</p>';
+    out.innerHTML = '<p style="font-family: var(--font-mono); font-weight: 700;">Recalculating SHA-256 hashes from Genesis block (0^64)...</p>';
 
     try {
         const res = await fetch('/admin/verify-chain');
@@ -448,29 +473,29 @@ async function adminVerifyChain() {
 
         if (data.is_valid) {
             out.innerHTML = `
-                <div class="card" style="border-color: var(--success); background: rgba(16, 185, 129, 0.05);">
-                    <div style="color: var(--success); font-weight: 700; margin-bottom: 0.5rem;">
-                        ✅ HASH CHAIN INTEGRITY CONFIRMED
+                <div class="cyber-panel" style="border-color: var(--success); background: #ffffff;">
+                    <div style="color: var(--success); font-family: var(--font-mono); font-weight: 800; margin-bottom: 0.5rem;">
+                        ✅ SHA-256 HASH CHAIN INTEGRITY CONFIRMED
                     </div>
-                    <p>All ${data.total_blocks} vote blocks are cryptographically linked back to Genesis.</p>
-                    <p style="color: var(--text-muted); font-size: 0.85rem;">${data.details.message}</p>
+                    <p style="font-family: var(--font-mono); font-size: 0.88rem;">All ${data.total_blocks} vote blocks are cryptographically verified back to Genesis.</p>
+                    <p style="color: var(--text-muted); font-family: var(--font-mono); font-size: 0.82rem; margin-top: 0.5rem;">${data.details.message}</p>
                 </div>
             `;
         } else {
             out.innerHTML = `
-                <div class="card" style="border-color: var(--danger); background: rgba(239, 68, 68, 0.05);">
-                    <div style="color: var(--danger); font-weight: 700; margin-bottom: 0.5rem;">
-                        🚨 HASH CHAIN INTEGRITY COMPROMISED!
+                <div class="cyber-panel" style="border-color: var(--danger); background: var(--danger-light);">
+                    <div style="color: var(--danger); font-family: var(--font-mono); font-weight: 800; margin-bottom: 0.5rem;">
+                        🚨 TAMPER DETECTED: CRYPTOGRAPHIC LINK BROKEN!
                     </div>
-                    <p>Tampering detected at block index #${data.details.block_index}.</p>
-                    <p style="color: var(--danger);">${data.details.error}</p>
-                    <div class="code-box">Expected: ${data.details.expected_entry_hash}\nFound:    ${data.details.found_entry_hash}</div>
-                    <p style="color: var(--secondary); font-size: 0.85rem;">An automated alert has been published to Amazon SNS!</p>
+                    <p style="font-family: var(--font-mono); font-size: 0.88rem;">Discrepancy identified at ledger block index #${data.details.block_index}.</p>
+                    <p style="color: var(--danger); font-family: var(--font-mono); font-weight: 700;">${data.details.error}</p>
+                    <div class="code-box">Expected Hash: ${data.details.expected_entry_hash}\nStored Hash:   ${data.details.found_entry_hash}</div>
+                    <p style="color: var(--purple-main); font-family: var(--font-mono); font-size: 0.82rem; font-weight: 800;">Automated alert published to Amazon SNS!</p>
                 </div>
             `;
         }
     } catch (err) {
-        out.innerHTML = `<p style="color: var(--danger);">Verification error: ${err.message}</p>`;
+        out.innerHTML = `<p style="color: var(--danger); font-family: var(--font-mono);">Verification error: ${err.message}</p>`;
     }
 }
 
@@ -481,7 +506,7 @@ async function adminCloseElection() {
         return;
     }
 
-    if (!confirm("Are you sure you want to CLOSE the election? This action locks voting and uploads audit files to S3.")) {
+    if (!confirm("Are you sure you want to CLOSE the election? This locks all voting and uploads audit archives to S3.")) {
         return;
     }
 
@@ -509,6 +534,7 @@ async function adminCloseElection() {
 
 // Initial Boot
 document.addEventListener('DOMContentLoaded', () => {
+    startSystemClock();
     updateSessionUI();
     fetchAuthorityPublicKey();
     if (state.lastReceiptHash) {
@@ -516,4 +542,3 @@ document.addEventListener('DOMContentLoaded', () => {
         if (input) input.value = state.lastReceiptHash;
     }
 });
-
