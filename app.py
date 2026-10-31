@@ -8,7 +8,7 @@ import json
 import secrets
 import hashlib
 from datetime import datetime, timezone
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 
 from config import Config
 from models import db, Candidate, Voter, UsedToken, Vote, AuditLog
@@ -107,6 +107,11 @@ def create_app(config_class=Config):
 
     @app.route('/', methods=['GET'])
     def health_check():
+        accept = request.headers.get('Accept', '')
+        # If requested from a browser accepting HTML, render modern responsive frontend
+        if 'text/html' in accept and 'application/json' not in accept:
+            return render_template('index.html')
+
         return jsonify({
             'service': 'CryptoVote REST API',
             'status': 'HEALTHY',
@@ -114,6 +119,11 @@ def create_app(config_class=Config):
             'election_status': 'OPEN' if election_state['is_open'] else 'CLOSED',
             'timestamp': datetime.now(timezone.utc).isoformat()
         }), 200
+
+    @app.route('/portal', methods=['GET'])
+    @app.route('/index.html', methods=['GET'])
+    def portal_view():
+        return render_template('index.html')
 
     @app.route('/crypto/public-key', methods=['GET'])
     def get_public_key():
